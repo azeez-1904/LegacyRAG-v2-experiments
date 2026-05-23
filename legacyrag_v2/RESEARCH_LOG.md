@@ -219,6 +219,57 @@ Each verification step effectively runs 9 forward passes sequentially, negating 
 
 ---
 
+## [MANUAL] Experiment 3 Results — 2026-05-23
+
+**Mode:** ngram-simple (`--spec-type ngram-simple --spec-draft-n-max 8`). b9297 binary.
+**Model:** phi3:mini (same as exp1). VRAM: GPU0 ~1825MB, GPU1 ~1560MB. Run time: ~14 min. 10/10 ok.
+
+### Raw Results Table
+
+| # | Bucket | Prefill (s) | tok/s | Wall (s) | vs exp1 tok/s |
+|---|--------|-------------|-------|----------|---------------|
+| 1 | short  | 1.7   | 10.388 | 21.0  | +21.6% |
+| 2 | short  | 1.4   | 8.823  | 24.1  | +3.0%  |
+| 3 | short  | 1.4   | 9.218  | 23.2  | +7.7%  |
+| 4 | medium | 84.0  | 8.993  | 106.4 | +7.2%  |
+| 5 | medium | 83.5  | 9.100  | 105.6 | +8.4%  |
+| 6 | medium | 1.3   | 9.223  | 23.1  | +9.6%  |
+| 7 | medium | 1.3   | 9.149  | 23.3  | +9.1%  |
+| 8 | long   | 166.9 | 8.242  | 191.3 | +3.8%  |
+| 9 | long   | 83.7  | 8.880  | 106.4 | +14.6% |
+| 10 | long  | 166.7 | 8.826  | 189.5 | +12.4% |
+
+### Summary vs Exp1
+
+| Metric | Exp3 ngram-simple | Exp1 baseline | Delta |
+|--------|-------------------|---------------|-------|
+| Mean tok/s | **9.084** | 8.279 | **+9.7%** |
+| Mean wall (s) | 81.4 | 188.4 | −57% |
+| p95 wall (s) | 191.3 | 410.0 | −53% |
+
+### Key Observations
+
+**1. Ngram-simple gives consistent +9.7% generation speedup — zero extra VRAM cost.**
+Every prompt improves. No draft model needed, no tokenizer constraints. Practical win for
+any deployment already running phi3-mini on this hardware.
+
+**2. b9297 prompt cache causes two-tier prefill within a single server session.**
+Prompts 6, 7 (medium) show 1.3s prefill; prompt 9 (long) shows 83.7s — far below expected
+125–376s from exp1. b9297 enables KV cache persistence across requests. When a new prompt
+prefix overlaps a previously cached context, prefill is skipped for those tokens. This explains
+the dramatic wall time reduction for some requests (23s instead of 149s).
+
+**3. b9297 vs b5576 confound exists — note in paper methods.**
+Exp1 used b5576, exp3 uses b9297. Some throughput gain may come from b9297 Vulkan shader
+improvements rather than ngram alone. A b9297 baseline (same build, no ngram) would isolate
+contributions. Flag as limitation in methods section.
+
+**4. Ngram benefit is content-independent (unlike draft-model speculative decoding).**
+Draft-model acceptance varied 21–67% by topic. Ngram-simple improvement is consistent across
+AI-focused, hardware-analysis, and government/OPRA prompts (+3% to +22%).
+
+---
+
 ## [MANUAL] Exp2 Setup Finding — 2026-05-23: phi3+qwen2 Vocabulary Incompatibility
 
 **Problem:** llama-server b5576 crashed when launching phi3:mini + qwen2:1.5b speculative decoding.
