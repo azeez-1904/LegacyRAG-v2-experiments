@@ -1,6 +1,6 @@
 # LegacyRAG v2 — Experiment Findings
 
-_Generated: 2026-05-23T21:54:40.148493+00:00_
+_Generated: 2026-05-23T21:59:09.226146+00:00_
 
 ---
 
