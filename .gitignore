@@ -23,6 +23,9 @@ build/
 # llama.cpp source tree and binaries (too large, not part of the RAG code)
 llama.cpp/
 llama-*.zip
+llama-*.tar.gz
+build_b9297/
+build/
 
 # Model blobs (never commit model weights)
 *.gguf

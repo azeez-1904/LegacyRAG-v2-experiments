@@ -1,0 +1,3 @@
+# Server process logs — too noisy for version control
+server*.log
+exp*_stdout.log

@@ -1,0 +1,565 @@
+{
+  "experiment": "exp1_baseline",
+  "model": "phi3:mini",
+  "backend": "vulkan",
+  "timestamp": "2026-05-23T20:41:40.959618+00:00",
+  "server_args": [
+    "-ngl",
+    "99"
+  ],
+  "vram_pre_server": [
+    {
+      "gpu": 0,
+      "free_mb": 3689.0,
+      "used_mb": 345.0,
+      "total_mb": 4034.0
+    },
+    {
+      "gpu": 1,
+      "free_mb": 4030.0,
+      "used_mb": 7.0,
+      "total_mb": 4037.0
+    }
+  ],
+  "vram_post_experiment": [
+    {
+      "gpu": 0,
+      "free_mb": 2049.0,
+      "used_mb": 1985.0,
+      "total_mb": 4034.0
+    },
+    {
+      "gpu": 1,
+      "free_mb": 2489.0,
+      "used_mb": 1548.0,
+      "total_mb": 4037.0
+    }
+  ],
+  "summary": {
+    "n_success": 10,
+    "n_error": 0,
+    "mean_tok_per_sec": 8.2785,
+    "median_tok_per_sec": 8.3982,
+    "mean_latency_s": 188.43,
+    "p95_latency_s": 409.99,
+    "by_bucket": {
+      "short": {
+        "count": 3,
+        "mean_tok_per_sec": 8.5541,
+        "mean_latency_s": 25.03
+      },
+      "medium": {
+        "count": 4,
+        "mean_tok_per_sec": 8.3953,
+        "mean_latency_s": 148.74
+      },
+      "long": {
+        "count": 3,
+        "mean_tok_per_sec": 7.8471,
+        "mean_latency_s": 404.76
+      }
+    }
+  },
+  "results": [
+    {
+      "id": 1,
+      "bucket": "short",
+      "timestamp": "2026-05-23T20:09:55.242855+00:00",
+      "prompt_words": 15,
+      "tokens_evaluated": 18,
+      "tokens_predicted": 200,
+      "tok_per_sec": 8.5356,
+      "first_token_ms": 117.16,
+      "total_latency_s": 25.151,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2058.0,
+          "used_mb": 1976.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2492.0,
+          "used_mb": 1545.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2058.0,
+          "used_mb": 1976.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2492.0,
+          "used_mb": 1545.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 18,
+        "prompt_ms": 1718.331,
+        "prompt_per_token_ms": 95.46283333333332,
+        "prompt_per_second": 10.475280955764633,
+        "predicted_n": 200,
+        "predicted_ms": 23431.164,
+        "predicted_per_token_ms": 117.15582,
+        "predicted_per_second": 8.53564082433122
+      },
+      "error": null
+    },
+    {
+      "id": 2,
+      "bucket": "short",
+      "timestamp": "2026-05-23T20:10:20.430472+00:00",
+      "prompt_words": 12,
+      "tokens_evaluated": 18,
+      "tokens_predicted": 200,
+      "tok_per_sec": 8.5688,
+      "first_token_ms": 116.7,
+      "total_latency_s": 24.941,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2058.0,
+          "used_mb": 1976.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2492.0,
+          "used_mb": 1545.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2059.0,
+          "used_mb": 1975.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2492.0,
+          "used_mb": 1545.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 18,
+        "prompt_ms": 1598.601,
+        "prompt_per_token_ms": 88.81116666666668,
+        "prompt_per_second": 11.259845327258022,
+        "predicted_n": 200,
+        "predicted_ms": 23340.432,
+        "predicted_per_token_ms": 116.70216,
+        "predicted_per_second": 8.568821691046677
+      },
+      "error": null
+    },
+    {
+      "id": 3,
+      "bucket": "short",
+      "timestamp": "2026-05-23T20:10:45.409104+00:00",
+      "prompt_words": 16,
+      "tokens_evaluated": 19,
+      "tokens_predicted": 200,
+      "tok_per_sec": 8.558,
+      "first_token_ms": 116.85,
+      "total_latency_s": 24.992,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2059.0,
+          "used_mb": 1975.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2492.0,
+          "used_mb": 1545.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2059.0,
+          "used_mb": 1975.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2492.0,
+          "used_mb": 1545.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 19,
+        "prompt_ms": 1620.135,
+        "prompt_per_token_ms": 85.27026315789473,
+        "prompt_per_second": 11.727417776913653,
+        "predicted_n": 200,
+        "predicted_ms": 23369.997,
+        "predicted_per_token_ms": 116.849985,
+        "predicted_per_second": 8.55798141523082
+      },
+      "error": null
+    },
+    {
+      "id": 4,
+      "bucket": "medium",
+      "timestamp": "2026-05-23T20:11:10.436255+00:00",
+      "prompt_words": 71,
+      "tokens_evaluated": 91,
+      "tokens_predicted": 200,
+      "tok_per_sec": 8.3848,
+      "first_token_ms": 119.26,
+      "total_latency_s": 148.637,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2059.0,
+          "used_mb": 1975.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2492.0,
+          "used_mb": 1545.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2055.0,
+          "used_mb": 1979.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2490.0,
+          "used_mb": 1547.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 91,
+        "prompt_ms": 124780.898,
+        "prompt_per_token_ms": 1371.2186593406593,
+        "prompt_per_second": 0.729278290656315,
+        "predicted_n": 200,
+        "predicted_ms": 23852.7,
+        "predicted_per_token_ms": 119.26350000000001,
+        "predicted_per_second": 8.384795012723927
+      },
+      "error": null
+    },
+    {
+      "id": 5,
+      "bucket": "medium",
+      "timestamp": "2026-05-23T20:13:39.109731+00:00",
+      "prompt_words": 71,
+      "tokens_evaluated": 110,
+      "tokens_predicted": 200,
+      "tok_per_sec": 8.3982,
+      "first_token_ms": 119.07,
+      "total_latency_s": 149.13,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2055.0,
+          "used_mb": 1979.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2490.0,
+          "used_mb": 1547.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2057.0,
+          "used_mb": 1977.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2490.0,
+          "used_mb": 1547.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 110,
+        "prompt_ms": 125312.321,
+        "prompt_per_token_ms": 1139.2029181818182,
+        "prompt_per_second": 0.87780674016883,
+        "predicted_n": 200,
+        "predicted_ms": 23814.753,
+        "predicted_per_token_ms": 119.07376500000001,
+        "predicted_per_second": 8.398155546689901
+      },
+      "error": null
+    },
+    {
+      "id": 6,
+      "bucket": "medium",
+      "timestamp": "2026-05-23T20:15:59.043813+00:00",
+      "prompt_words": 57,
+      "tokens_evaluated": 78,
+      "tokens_predicted": 200,
+      "tok_per_sec": 8.4138,
+      "first_token_ms": 118.85,
+      "total_latency_s": 148.637,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2057.0,
+          "used_mb": 1977.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2490.0,
+          "used_mb": 1547.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2055.0,
+          "used_mb": 1979.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2490.0,
+          "used_mb": 1547.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 78,
+        "prompt_ms": 124863.654,
+        "prompt_per_token_ms": 1600.816076923077,
+        "prompt_per_second": 0.6246813824621855,
+        "predicted_n": 200,
+        "predicted_ms": 23770.461,
+        "predicted_per_token_ms": 118.852305,
+        "predicted_per_second": 8.413804006577744
+      },
+      "error": null
+    },
+    {
+      "id": 7,
+      "bucket": "medium",
+      "timestamp": "2026-05-23T20:18:27.716404+00:00",
+      "prompt_words": 63,
+      "tokens_evaluated": 89,
+      "tokens_predicted": 200,
+      "tok_per_sec": 8.3843,
+      "first_token_ms": 119.27,
+      "total_latency_s": 148.558,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2055.0,
+          "used_mb": 1979.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2490.0,
+          "used_mb": 1547.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2057.0,
+          "used_mb": 1977.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2490.0,
+          "used_mb": 1547.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 89,
+        "prompt_ms": 124701.937,
+        "prompt_per_token_ms": 1401.1453595505618,
+        "prompt_per_second": 0.7137018248561768,
+        "predicted_n": 200,
+        "predicted_ms": 23854.024,
+        "predicted_per_token_ms": 119.27012,
+        "predicted_per_second": 8.384329620863967
+      },
+      "error": null
+    },
+    {
+      "id": 8,
+      "bucket": "long",
+      "timestamp": "2026-05-23T20:20:56.311548+00:00",
+      "prompt_words": 173,
+      "tokens_evaluated": 313,
+      "tokens_predicted": 200,
+      "tok_per_sec": 7.9424,
+      "first_token_ms": 125.91,
+      "total_latency_s": 402.382,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2057.0,
+          "used_mb": 1977.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2490.0,
+          "used_mb": 1547.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2030.0,
+          "used_mb": 2004.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2487.0,
+          "used_mb": 1550.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 313,
+        "prompt_ms": 377197.657,
+        "prompt_per_token_ms": 1205.1043354632588,
+        "prompt_per_second": 0.8298036697507907,
+        "predicted_n": 200,
+        "predicted_ms": 25181.398,
+        "predicted_per_token_ms": 125.90699000000001,
+        "predicted_per_second": 7.942370792916263
+      },
+      "error": null
+    },
+    {
+      "id": 9,
+      "bucket": "long",
+      "timestamp": "2026-05-23T20:27:38.728211+00:00",
+      "prompt_words": 170,
+      "tokens_evaluated": 260,
+      "tokens_predicted": 200,
+      "tok_per_sec": 7.7451,
+      "first_token_ms": 129.11,
+      "total_latency_s": 401.906,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2030.0,
+          "used_mb": 2004.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2487.0,
+          "used_mb": 1550.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2096.0,
+          "used_mb": 1938.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2487.0,
+          "used_mb": 1550.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 260,
+        "prompt_ms": 376080.376,
+        "prompt_per_token_ms": 1446.4629846153846,
+        "prompt_per_second": 0.691341576408124,
+        "predicted_n": 200,
+        "predicted_ms": 25822.665,
+        "predicted_per_token_ms": 129.113325,
+        "predicted_per_second": 7.745133974359346
+      },
+      "error": null
+    },
+    {
+      "id": 10,
+      "bucket": "long",
+      "timestamp": "2026-05-23T20:34:20.670869+00:00",
+      "prompt_words": 213,
+      "tokens_evaluated": 367,
+      "tokens_predicted": 200,
+      "tok_per_sec": 7.8537,
+      "first_token_ms": 127.33,
+      "total_latency_s": 409.989,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2096.0,
+          "used_mb": 1938.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2487.0,
+          "used_mb": 1550.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2049.0,
+          "used_mb": 1985.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2489.0,
+          "used_mb": 1548.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "prompt_n": 367,
+        "prompt_ms": 384518.0,
+        "prompt_per_token_ms": 1047.732970027248,
+        "prompt_per_second": 0.9544416646294841,
+        "predicted_n": 200,
+        "predicted_ms": 25465.788,
+        "predicted_per_token_ms": 127.32894,
+        "predicted_per_second": 7.853674113677535
+      },
+      "error": null
+    }
+  ]
+}
