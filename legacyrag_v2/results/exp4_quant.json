@@ -1,0 +1,304 @@
+{
+  "experiment": "exp4_quant",
+  "model": "qwen2.5:7b-instruct-q2_K",
+  "model_path": "/usr/share/ollama/.ollama/models/blobs/sha256-799735a41f235b3d35b192dcb99a6a555e7c190cc747754f231045643eb5b131",
+  "model_size_mb": 2876.2,
+  "pull_attempted": true,
+  "pull_success": true,
+  "feasibility_check": "Model size: 2876MB, Total free VRAM: 7875MB, VRAM limit: 8000MB \u2014 OK",
+  "backend": "vulkan",
+  "timestamp": "2026-05-23T21:51:00.543688+00:00",
+  "server_args": [
+    "-ngl",
+    "99",
+    "--ctx-size",
+    "1024"
+  ],
+  "vram_pre_server": [
+    {
+      "gpu": 0,
+      "free_mb": 3845.0,
+      "used_mb": 189.0,
+      "total_mb": 4034.0
+    },
+    {
+      "gpu": 1,
+      "free_mb": 4030.0,
+      "used_mb": 7.0,
+      "total_mb": 4037.0
+    }
+  ],
+  "vram_post_experiment": [
+    {
+      "gpu": 0,
+      "free_mb": 2410.0,
+      "used_mb": 1624.0,
+      "total_mb": 4034.0
+    },
+    {
+      "gpu": 1,
+      "free_mb": 2159.0,
+      "used_mb": 1878.0,
+      "total_mb": 4037.0
+    }
+  ],
+  "summary": {
+    "n_success": 5,
+    "n_error": 0,
+    "mean_tok_per_sec": 3.8232,
+    "mean_latency_s": 72.31,
+    "p95_latency_s": 192.33,
+    "speedup_vs_phi3_baseline": 4.024,
+    "baseline_reference": {
+      "model": "phi3:mini",
+      "mean_tok_per_sec": 0.95
+    }
+  },
+  "results": [
+    {
+      "id": 1,
+      "bucket": "short",
+      "timestamp": "2026-05-23T21:44:27.264604+00:00",
+      "prompt_words": 15,
+      "tokens_predicted": 150,
+      "tok_per_sec": 3.8199,
+      "total_latency_s": 42.855,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2413.0,
+          "used_mb": 1621.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2162.0,
+          "used_mb": 1875.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2413.0,
+          "used_mb": 1621.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2161.0,
+          "used_mb": 1876.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 16,
+        "prompt_ms": 3584.956,
+        "prompt_per_token_ms": 224.05975,
+        "prompt_per_second": 4.463095223483914,
+        "predicted_n": 150,
+        "predicted_ms": 39267.53,
+        "predicted_per_token_ms": 261.7835333333333,
+        "predicted_per_second": 3.8199499688419416
+      },
+      "error": null
+    },
+    {
+      "id": 2,
+      "bucket": "short",
+      "timestamp": "2026-05-23T21:45:10.157513+00:00",
+      "prompt_words": 12,
+      "tokens_predicted": 150,
+      "tok_per_sec": 3.8273,
+      "total_latency_s": 42.467,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2413.0,
+          "used_mb": 1621.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2161.0,
+          "used_mb": 1876.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2413.0,
+          "used_mb": 1621.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2161.0,
+          "used_mb": 1876.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 15,
+        "prompt_ms": 3260.46,
+        "prompt_per_token_ms": 217.364,
+        "prompt_per_second": 4.600577832575771,
+        "predicted_n": 150,
+        "predicted_ms": 39192.433,
+        "predicted_per_token_ms": 261.2828866666666,
+        "predicted_per_second": 3.827269411929594
+      },
+      "error": null
+    },
+    {
+      "id": 3,
+      "bucket": "medium",
+      "timestamp": "2026-05-23T21:45:52.658674+00:00",
+      "prompt_words": 42,
+      "tokens_predicted": 150,
+      "tok_per_sec": 3.8262,
+      "total_latency_s": 42.06,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2413.0,
+          "used_mb": 1621.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2161.0,
+          "used_mb": 1876.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2413.0,
+          "used_mb": 1621.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2161.0,
+          "used_mb": 1876.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 54,
+        "prompt_ms": 2835.84,
+        "prompt_per_token_ms": 52.51555555555556,
+        "prompt_per_second": 19.041976980365604,
+        "predicted_n": 150,
+        "predicted_ms": 39203.727,
+        "predicted_per_token_ms": 261.35818,
+        "predicted_per_second": 3.826166833576818
+      },
+      "error": null
+    },
+    {
+      "id": 4,
+      "bucket": "medium",
+      "timestamp": "2026-05-23T21:46:34.754013+00:00",
+      "prompt_words": 41,
+      "tokens_predicted": 150,
+      "tok_per_sec": 3.8092,
+      "total_latency_s": 192.333,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2413.0,
+          "used_mb": 1621.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2161.0,
+          "used_mb": 1876.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2410.0,
+          "used_mb": 1624.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2159.0,
+          "used_mb": 1878.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 69,
+        "prompt_ms": 152932.171,
+        "prompt_per_token_ms": 2216.408275362319,
+        "prompt_per_second": 0.4511804125241902,
+        "predicted_n": 150,
+        "predicted_ms": 39378.507,
+        "predicted_per_token_ms": 262.52338,
+        "predicted_per_second": 3.8091845381542777
+      },
+      "error": null
+    },
+    {
+      "id": 5,
+      "bucket": "medium",
+      "timestamp": "2026-05-23T21:49:47.122807+00:00",
+      "prompt_words": 47,
+      "tokens_predicted": 150,
+      "tok_per_sec": 3.8333,
+      "total_latency_s": 41.817,
+      "vram_before": [
+        {
+          "gpu": 0,
+          "free_mb": 2410.0,
+          "used_mb": 1624.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2159.0,
+          "used_mb": 1878.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "vram_after": [
+        {
+          "gpu": 0,
+          "free_mb": 2410.0,
+          "used_mb": 1624.0,
+          "total_mb": 4034.0
+        },
+        {
+          "gpu": 1,
+          "free_mb": 2159.0,
+          "used_mb": 1878.0,
+          "total_mb": 4037.0
+        }
+      ],
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 59,
+        "prompt_ms": 2660.841,
+        "prompt_per_token_ms": 45.099,
+        "prompt_per_second": 22.173440652786095,
+        "predicted_n": 150,
+        "predicted_ms": 39130.776,
+        "predicted_per_token_ms": 260.87183999999996,
+        "predicted_per_second": 3.833299906958145
+      },
+      "error": null
+    }
+  ]
+}

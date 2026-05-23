@@ -146,13 +146,15 @@ def key_finding_exp4(data: dict, s: dict, exp1_s: dict) -> str:
 
     tps = s.get("mean_tok_per_sec", 0)
     exp1_tps = exp1_s.get("mean_tok_per_sec", V1_BASELINE["mean_tok_per_sec"])
-    speedup = s.get("speedup_vs_phi3_baseline", tps / exp1_tps if exp1_tps else None)
+    # Always compare against exp1 (not the stored v1-relative speedup field)
+    speedup = tps / exp1_tps if exp1_tps else None
     size_mb = data.get("model_size_mb", 0)
+    direction = "speedup" if (speedup or 0) > 1 else "slowdown"
 
     lines = [
         f"qwen2.5:7b-instruct-q2_K ({size_mb:.0f}MB) achieved **{tps:.3f} tok/s** mean "
-        f"on 5 short/medium prompts, versus phi3-mini baseline of {exp1_tps:.3f} tok/s "
-        f"(**{(speedup or 1.0):.2f}× relative**).",
+        f"on 5 short/medium prompts, versus phi3-mini exp1 baseline of {exp1_tps:.3f} tok/s "
+        f"(**{(speedup or 1.0):.2f}× — a {direction} vs phi3-mini**).",
     ]
     if speedup and speedup < 0.8:
         lines.append(
@@ -209,7 +211,9 @@ def generate_findings() -> None:
         )
 
     exp1_model = (exp1 or {}).get("model", "phi3:mini")
-    exp2_model = (exp2 or {}).get("model_main", "phi3:mini") + " + qwen2:1.5b draft"
+    _e2_main = (exp2 or {}).get("model_main", "phi3:mini")
+    _e2_draft = (exp2 or {}).get("model_draft", "unknown")
+    exp2_model = f"{_e2_main} + {_e2_draft} draft"
     exp3_model = (exp3 or {}).get("mode", "phi3:mini (ablation)")
     exp4_model = (exp4 or {}).get("model", "qwen2.5:7b-q2_K")
 
@@ -254,7 +258,7 @@ def generate_findings() -> None:
         f"> Speculative decoding using qwen2:1.5b (934MB) as a draft model with --draft-max 8 yielded {fmt(s2.get('mean_tok_per_sec') if s2 else None)} tokens/second mean throughput ({pct_change(s2.get('mean_tok_per_sec') if s2 else None, exp1_tps)} vs. baseline), suggesting that {'VRAM overhead of loading a second model limits gains' if (s2.get('mean_tok_per_sec') or 0) <= (exp1_tps or 1) else 'parallel draft verification provides measurable throughput gains'} on Maxwell-class hardware without native FP16 acceleration.",
         f"",
         f"**On quantization:**",
-        f"> At Q2_K quantization, qwen2.5:7b-instruct ({fmt(s4.get('model_size_mb') if s4 else None, '.0f')}MB) achieved {fmt(s4.get('mean_tok_per_sec') if s4 else None)} tokens/second, representing a {fmt(s4.get('speedup_vs_phi3_baseline') if s4 else None, '.2f')}× {'speedup' if (s4 or {}).get('summary', {}).get('speedup_vs_phi3_baseline', 1) > 1 else 'slowdown'} relative to phi3-mini Q4. This demonstrates that model size, not only quantization level, is the primary throughput determinant on legacy Vulkan hardware with 173 GB/s memory bandwidth.",
+        f"> At Q2_K quantization, qwen2.5:7b-instruct ({fmt((exp4 or {}).get('model_size_mb'), '.0f')}MB) achieved {fmt(s4.get('mean_tok_per_sec') if s4 else None)} tokens/second, representing a {fmt((s4.get('mean_tok_per_sec') or 0) / (exp1_tps or 1), '.2f')}× {'speedup' if (s4.get('mean_tok_per_sec') or 0) > (exp1_tps or 1) else 'slowdown'} relative to phi3-mini Q4. This demonstrates that model size, not only quantization level, is the primary throughput determinant on legacy Vulkan hardware with 173 GB/s memory bandwidth.",
         f"",
         f"**On hardware limitations:**",
         f"> The NVIDIA Quadro K4200 (Maxwell GM204, 2014) achieves 0.9–1.2 tokens/second for 3-4B parameter models at Q4 quantization under Vulkan, approximately 60–80× slower than a modern RTX 4090 (CUDA, FP16) running the same model. The absence of tensor core instructions means all matrix multiplications execute as full-precision SIMD operations, making memory bandwidth — not compute — the primary bottleneck.",

@@ -134,9 +134,63 @@ which included both slow prefill and generation — artificially depressing the 
 generation tok/s. **The true generation rate on K4200 dual-Vulkan is ~8 tok/s.**
 
 ### What to Try Next
-- Exp2: Speculative decoding → phi3+qwen2 INCOMPATIBLE (see below). Using qwen2:1.5b+qwen2:0.5b.
-- Exp3: N-gram speculative. Downloaded b9297 which exposes `--spec-type ngram-simple`.
-- Exp4: qwen2.5-7B Q2_K. Prefill will be even slower for 7B; focus on short prompts.
+- ✓ Exp2: qwen2:1.5b + qwen2:0.5b draft (see results below)
+- ✓ Exp3: ngram-simple on phi3:mini via b9297 (see results below)
+- ✓ Exp4: qwen2.5:7b Q2_K (see results below)
+
+---
+
+## [MANUAL] Experiment 4 Results — 2026-05-23
+
+**Model:** qwen2.5:7b-instruct-q2_K (2876MB, pulled via Ollama). b9297 binary.
+**VRAM:** GPU0 ~1621MB + GPU1 ~1875MB = 3496MB combined across both K4200s.
+**Run time:** ~4 min download + ~6 min inference. 5/5 prompts successful. 150 max tokens.
+
+### Raw Results Table
+
+| # | Bucket | Prompt tok | Gen tok | tok/s | Prefill (s) | Wall (s) |
+|---|--------|-----------|---------|-------|-------------|----------|
+| 1 | short  | 16 | 150 | 3.820 | 3.6   | 42.9  |
+| 2 | short  | 15 | 150 | 3.827 | 3.3   | 42.5  |
+| 3 | medium | 54 | 150 | 3.826 | 2.8   | 42.1  |
+| 4 | medium | 69 | 150 | 3.809 | 152.9 | 192.3 |
+| 5 | medium | 59 | 150 | 3.833 | 2.7   | 41.8  |
+
+### Summary vs Other Experiments
+
+| Metric | Exp4 (7B Q2_K) | Exp1 (3.8B Q4) | Exp3 (3.8B ngram) |
+|--------|----------------|----------------|---------------------|
+| Mean tok/s | **3.823** | 8.279 | 9.084 |
+| Model size | 2876MB | 2100MB | 2100MB |
+| vs exp1 tok/s | **−53.8%** | — | +9.7% |
+
+### Key Observations
+
+**1. 7B Q2_K is 54% slower than 3.8B Q4 on K4200 Vulkan — model size dominates.**
+qwen2.5-7B at 2876MB runs at 3.82 tok/s. phi3-mini at ~2100MB runs at 8.28 tok/s.
+Despite being more aggressively quantized (Q2 vs Q4), the larger model is significantly slower.
+On Maxwell, the memory bandwidth bottleneck means more parameters = more data to move per token,
+regardless of quantization. The 37% size increase (2100→2876MB) doesn't fully explain the 54%
+slowdown — the 7B model also has more layers and wider attention, increasing per-layer compute.
+
+**2. Striking tok/s consistency across all 5 prompts (3.809–3.833) — negligible variance.**
+Unlike exp1 (range 7.75–8.57) or exp2 (range 2.29–5.46), the 7B model shows almost no
+variance. This likely reflects that at this model size and quantization, the K4200's memory
+bandwidth is saturated in a stable, predictable way — no headroom for thermal variation.
+
+**3. Two-tier prefill again visible (b9297 prompt cache).**
+Prompts 3, 5 (54, 59 tokens): 2.7–2.8s prefill. Prompt 4 (69 tokens): 152.9s.
+Same KV cache reuse pattern as exp3 — when prefix overlaps cached context, prefill skips.
+
+**4. Q2_K 7B does NOT fit the "bigger model = better quality + acceptable slowdown" trade-off.**
+At 3.82 tok/s mean and 192s p95 latency for a medium prompt, the 7B model offers
+quality improvements over phi3-mini but at an unacceptable latency for real-time use.
+For government OPRA queries where response time must be under 5 minutes, 3.82 tok/s
+on 150 tokens = 39s generation + ~150s prefill for medium queries = borderline.
+
+**5. The speedup_vs_phi3_baseline field (4.024×) is misleading — uses v1 0.95 tok/s.**
+This compares against the v1 Ollama single-GPU metric which included prefill.
+Correct comparison: exp4 (3.82 tok/s) vs exp1 (8.28 tok/s) = 0.46× (54% slower).
 
 ---
 

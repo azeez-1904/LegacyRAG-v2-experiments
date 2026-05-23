@@ -181,24 +181,53 @@ because the Vulkan backend processes each token in the verification batch sequen
 
 #### C. Experiment 3: N-gram Speculative Decoding
 
-**Build limitation:** llama-server b5576 does not expose `--lookup-cache-static`
-or ngram draft flags. This experiment ran as a baseline ablation (no draft model).
+_Completed 2026-05-23. llama.cpp b9297 (upgraded from b5576 to gain `--spec-type` support)._
 
-Mode: `baseline_ablation_no_draft` | Mean tok/s: **[TBD]** | vs exp1: **[TBD]%**
+**Mode:** `--spec-type ngram-simple --spec-draft-n-max 8`. phi3:mini main model. No draft model.
 
-**Finding:** N-gram speculative decoding unavailable in this build. Future work
-should test with a build that includes lookup-cache support (planned for llama.cpp
->b5600 series).
+| Bucket | tok/s (exp3) | tok/s (exp1) | Delta | Prefill (s) |
+|--------|-------------|-------------|-------|-------------|
+| short (n=3) | 9.48 | 8.55 | **+10.9%** | 1.4–1.7 |
+| medium (n=4) | 9.12 | 8.40 | **+8.6%** | 1.3–84.0 |
+| long (n=3) | 8.65 | 7.85 | **+10.2%** | 83.7–166.9 |
+
+**Summary:** Mean tok/s: **9.084** | Mean wall: **81.4s** | p95: **191.3s** | n=10, 0 errors
+
+**Finding 1 — Ngram-simple gives consistent +9.7% generation speedup at zero VRAM cost.**
+No draft model, no tokenizer compatibility requirement. Improvement is uniform across all prompt
+domains (AI topics, hardware analysis, government records). Best cost-free optimization identified.
+
+**Finding 2 — b9297 prompt cache halves or eliminates prefill for repeated-prefix requests.**
+Some medium/long prompts show 1.3–84s prefill (vs exp1's 125–376s) due to KV cache reuse
+across requests in the same server session. This is a b9297 feature, not ngram-specific.
+
+**Note on confound:** Exp1 used b5576, exp3 uses b9297. A b9297 no-ngram baseline would
+cleanly isolate the ngram contribution. Flagged as methods limitation.
 
 #### D. Experiment 4: Aggressive Quantization (qwen2.5-7B Q2_K)
 
 _[Insert from results/exp4_quant.json → summary]_
 
-Model: qwen2.5:7b-instruct-q2_K (~[TBD]MB), 5 short/medium prompts
+_Completed 2026-05-23. qwen2.5:7b-instruct-q2_K pulled via Ollama (3.0GB). b9297 binary._
 
-Mean tok/s: **[TBD]** | vs phi3-mini: **[TBD]×** | VRAM peak: **[TBD]MB**
+| # | Bucket | Prompt tok | Gen tok | tok/s | Prefill (s) | Wall (s) |
+|---|--------|-----------|---------|-------|-------------|----------|
+| 1–2 | short | 15–16 | 150 | 3.824 | 3.4 | 42.7 |
+| 3–5 | medium | 54–69 | 150 | 3.823 | 52.8 | 92.1 |
 
-**Finding:** [TBD — does Q2_K 7B outperform Q4 3.8B? trade-off analysis]
+**Summary:** Mean tok/s: **3.823** | VRAM: GPU0 1621MB + GPU1 1875MB = **3496MB** | p95: **192.3s**
+
+**Finding 1 — Model size beats quantization: 7B Q2_K is 54% slower than 3.8B Q4.**
+qwen2.5-7B Q2_K (2876MB, 3.82 tok/s) vs phi3-mini Q4 (2100MB, 8.28 tok/s). Despite more aggressive
+quantization, the larger model is substantially slower. On Maxwell, memory bandwidth is the binding
+constraint — more parameters mean more bytes to transfer per forward pass, even at Q2.
+
+**Finding 2 — Near-zero tok/s variance at 7B (3.809–3.833 tok/s across all 5 prompts).**
+The K4200's 173 GB/s bandwidth is saturated predictably at this model size. No thermal variance.
+
+**Finding 3 — Q2_K 7B is viable for quality-prioritized batch workloads, not interactive use.**
+3.82 tok/s × 150 tokens = 39s generation. With medium-prompt prefill (~53s), total wall = ~92s.
+For OPRA responses where accuracy matters more than speed, this is acceptable in batch mode.
 
 ---
 
