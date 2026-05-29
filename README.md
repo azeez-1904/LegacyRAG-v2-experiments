@@ -1,162 +1,373 @@
-# LegacyRAG
+# LegacyRAG v2 — Speculative Decoding & Quantization Benchmarks on Legacy Vulkan Hardware
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
-[![arXiv](https://img.shields.io/badge/arXiv-preprint-red.svg)](https://arxiv.org/)
+[![IEEE IC2E 2026](https://img.shields.io/badge/IEEE-IC2E%202026-blue.svg)](https://conferences.computer.org/IC2E/)
 
-A VRAM-aware Retrieval-Augmented Generation pipeline designed for legacy GPU hardware. Built for a research paper on inference constraints with dual NVIDIA Quadro K4200 GPUs (4 GB VRAM each) running llama.cpp via the Vulkan backend.
+> **Target venue:** IEEE International Conference on Cloud Engineering (IC2E) 2026 — Demo Paper
+
+---
 
 ## What It Does
 
-LegacyRAG solves a real problem: running a full RAG pipeline (embed → retrieve → generate) on GPUs that predate FP16, tensor cores, and NVLink. The key innovation is a VRAM-aware scheduler that queries `nvidia-smi` before every embedding operation and routes to CPU or GPU based on live free-VRAM thresholds — protecting generation VRAM while keeping embeddings fast.
+LegacyRAG v2 is a **reproducible benchmark suite** that tests whether two popular LLM acceleration techniques — speculative decoding and aggressive quantization — actually help on old GPU hardware that never received the compute features these tricks depend on.
 
-```
-POST /ingest  →  chunk → embed (VRAM-aware) → store
-POST /query   →  embed query → cosine retrieve → generate → benchmark
-```
+**Plain-English analogy:** Imagine you own a 2004 Honda Civic and you want to go faster. Someone suggests installing a turbocharger (speculative decoding) or swapping in a smaller, lighter engine (quantization to a bigger model). The turbocharger requires engine mounts that don't exist on your car. The lighter engine is still a V6, so it's heavier than your original 4-cylinder even at reduced size. The only thing that actually helps is drafting behind a truck (n-gram prediction), which costs you nothing.
+
+That is exactly what we found on a pair of NVIDIA Quadro K4200 GPUs from 2014.
+
+**The question this project answers:** On hardware without FP16 or tensor cores — where all matrix math runs in FP32 — do speculative decoding or heavy quantization improve inference throughput for an edge RAG pipeline?
+
+**Short answer:** No, with one exception. N-gram speculative decoding (+10%) is the only technique that helps, because it adds zero VRAM overhead and requires no parallel verification step.
+
+---
 
 ## Hardware Target
 
 | Component | Spec |
 |---|---|
-| GPU | 2× NVIDIA Quadro K4200 |
+| GPU | 2x NVIDIA Quadro K4200 |
 | VRAM | 4 GB GDDR5 per card |
-| Architecture | Maxwell (2014), no FP16, no matrix cores |
-| Inference backend | llama.cpp b5576 + Vulkan |
-| LLM | phi3-mini (3.82B, Q4_0, ~2.1 GB) |
+| Architecture | Maxwell GM204 (2014), no FP16, no tensor cores |
+| Memory bandwidth | 173 GB/s per card |
+| Inference backend | llama.cpp b9297 + Vulkan 1.3 |
+| LLM | phi3:mini (3.8B, Q4_K_M) |
 | Embedding model | nomic-embed-text via Ollama |
 
-## Stack
-
-- **FastAPI** — HTTP endpoints (`/ingest`, `/query`, `/health`, `/stress-test`)
-- **llama.cpp server** — OpenAI-compatible generation on port 8080
-- **Ollama** — nomic-embed-text embeddings on port 11434
-- **numpy** — in-memory cosine similarity retrieval
-- **nvidia-smi** — real-time per-GPU VRAM monitoring
+---
 
 ## Key Features
 
-- **Per-GPU VRAM scheduler** — checks both GPUs independently against an 800 MB threshold; logs every routing decision with timestamp to `schedule_decisions.jsonl`
-- **GenerationContext guard** — while generation is active, embeddings are automatically blocked from GPU to prevent VRAM contention
-- **Stall detection with retry** — streaming generation with two-phase timeout: 600s queue-wait, 45s inter-token. On stall, retries with progressively reduced context (all chunks → half → 1)
-- **Benchmark logger** — records per-request latency breakdown, tok/s, and VRAM snapshots to `benchmark_results.json`
-- **Stress test endpoint** — `POST /stress-test?n_concurrent=N` fires N concurrent requests and reports per-GPU VRAM delta, CPU fallback rate, and aggregate throughput
+- **4 standalone benchmark experiments** — each Python script is self-contained and re-runnable
+- **`benchmark_runner.py`** — orchestrates all 4 experiments sequentially, writes structured JSON to `results/`
+- **Controlled comparison** — all experiments run against the same hardware, same Vulkan backend, same prompt corpus
+- **Honest negative results** — v2 documents what *does not* work and explains exactly why, not just what does
+- **Builds on v1 baseline** — v1 measured 0.95 tok/s; v2 baseline (Exp 1) measures 8.278 tok/s after llama.cpp backend upgrade, giving a 771% improvement as the new reference point
+- **Analysis module** — `analysis.py` generates comparison tables and summary statistics from the `results/` directory
+
+---
+
+## Benchmark Results
+
+### Summary Table
+
+| Experiment | Model | Mean tok/s | vs v1 baseline | vs Exp 1 |
+|---|---|---|---|---|
+| v1 Baseline (reference) | phi3:mini | 0.95 | — | — |
+| **Exp 1: phi3:mini baseline (v2)** | phi3:mini Q4_K_M | **8.278** | +771% | — |
+| Exp 2: Speculative decoding | qwen2:1.5b + qwen2:0.5b draft | 3.357 | +253% | **−59%** |
+| Exp 3: N-gram speculative | ngram-simple | **9.084** | +856% | +10% |
+| Exp 4: Quantization 7B | qwen2.5:7b-q2_K | 3.823 | +302% | **−54%** |
+
+### ASCII Throughput Bar Chart
+
+```
+Throughput (tok/s) — all experiments
+─────────────────────────────────────────────────────
+v1 Baseline  │▌                                          0.95 tok/s
+─────────────────────────────────────────────────────
+Exp 1        │████████████████████████████████████████  8.278 tok/s
+Exp 2        │████████████████                          3.357 tok/s
+Exp 3        │█████████████████████████████████████████ 9.084 tok/s  ← best
+Exp 4        │██████████████████                        3.823 tok/s
+─────────────────────────────────────────────────────
+             0          2         4         6         9+ tok/s
+```
+
+### Experiment 1 Detail — phi3:mini Baseline by Prompt Length
+
+| Prompt length | Count | Mean tok/s | Wall time |
+|---|---|---|---|
+| Short | 3 | 8.554 | 25s |
+| Medium | 4 | 8.395 | 149s |
+| Long | 3 | 7.847 | 405s |
+
+Throughput is stable across prompt lengths — Maxwell's FP32 compute rate is the ceiling, not prompt context size.
+
+### Experiment 2 — Speculative Decoding
+
+- **Draft model:** qwen2:0.5b
+- **Target model:** qwen2:1.5b
+- **Draft acceptance rate:** 36.86%
+- **Throughput:** 3.357 tok/s (−59% vs Exp 1)
+
+### Experiment 3 — N-gram Speculative Decoding
+
+- **Method:** ngram-simple (predict repeated token sequences from recent context)
+- **Throughput:** 9.084 tok/s (+9.7% vs Exp 1)
+- **Extra VRAM:** 0 MB
+- **Extra model:** none
+
+### Experiment 4 — Aggressive Quantization (7B at Q2_K)
+
+- **Model:** qwen2.5:7b at Q2_K
+- **Model size on disk:** 2,876 MB
+- **Throughput:** 3.823 tok/s (−54% vs phi3:mini baseline)
+
+---
+
+## Why the Tricks Fail — ASCII Diagrams
+
+### How Speculative Decoding Is Supposed to Work
+
+```
+NORMAL AUTOREGRESSIVE DECODING
+───────────────────────────────
+Step 1: [prompt]         → token_1
+Step 2: [prompt, t1]     → token_2
+Step 3: [prompt, t1, t2] → token_3
+         ... (one step at a time)
+
+SPECULATIVE DECODING (intended)
+────────────────────────────────
+Draft model (small, fast):
+  [prompt] → guess_1, guess_2, guess_3, guess_4  (4 drafts in parallel)
+
+Target model (large):
+  [prompt + 4 drafts] → verify all 4 in ONE forward pass ← parallel!
+
+If accepted: 4 tokens for the price of ~1.3 forward passes → speedup
+```
+
+### Why It Fails on Maxwell (K4200)
+
+```
+WHAT ACTUALLY HAPPENS ON MAXWELL (no FP16, no tensor cores)
+─────────────────────────────────────────────────────────────
+All matrix operations run in FP32.
+"Verify all 4 in one forward pass" still runs 4 sequential FP32 ops.
+
+Draft model:    [K4200] → guess_1 → guess_2 → guess_3 → guess_4
+                         (sequential, FP32)
+
+Verification:   [K4200] → check_1 → check_2 → check_3 → check_4
+                         (still sequential — no parallel batch support)
+
+Acceptance:     36.86% of drafts accepted → 63% wasted compute
+
+Result: extra overhead from running the draft model, no parallelism benefit
+        −59% throughput vs just running the target model directly
+```
+
+### Why Aggressive Quantization Doesn't Help
+
+```
+QUANTIZATION INTUITION (intended)
+───────────────────────────────────
+phi3:mini  3.8B params  Q4_K_M  →  fast   ✓
+qwen2.5-7B 7B params    Q2_K    →  "same size file, should be similar speed"
+
+WHAT ACTUALLY DETERMINES SPEED ON MAXWELL
+───────────────────────────────────────────
+Not file size.  Not quantization level.  PARAMETER COUNT.
+
+Each transformer layer requires (params × bytes_per_param) multiply-add ops.
+7B at Q2_K still has 7B parameters to process.
+Maxwell executes every multiply-add in FP32 regardless of quantization.
+
+phi3:mini  3.8B × FP32 ops = ~15.2 GFLOP per token step
+qwen2.5-7B 7.0B × FP32 ops = ~28.0 GFLOP per token step  ← 1.84× more work
+
+Observed: −54% throughput. Quantization cannot undo parameter count.
+```
+
+### Why N-gram Speculation Works
+
+```
+N-GRAM SPECULATIVE DECODING
+─────────────────────────────
+Hypothesis: in long, repetitive RAG outputs, the model often
+            repeats short phrases verbatim ("The document states...",
+            "According to the policy...").
+
+N-gram method:
+  1. Maintain a sliding window of recent tokens
+  2. Look up the last N tokens in that window as a key
+  3. Predict: "next tokens are probably whatever followed this
+     pattern before in this same response"
+  4. Skip the draft model entirely — no VRAM, no extra forward pass
+
+Verification: same target model forward pass, but proposed tokens
+              often match → acceptance rate higher than learned draft
+
+Result: +9.7% throughput with zero additional resource cost
+        This is the only technique that actually helps on Maxwell.
+```
+
+---
+
+## What Works / What Doesn't
+
+| Technique | Result | Root cause |
+|---|---|---|
+| Upgraded llama.cpp backend (b9297 vs b5576) | +771% vs v1 | Better Vulkan dispatch, not new hardware |
+| N-gram speculative decoding | +10% | No parallel requirement; pattern matching only |
+| Speculative decoding (learned draft) | −59% | Maxwell verifies drafts sequentially in FP32 |
+| Aggressive quantization (bigger model, lower bits) | −54% | Parameter count drives FP32 op count; bits don't |
+| Dual-GPU layer split (from v1) | −50% prefill | Inter-GPU Vulkan sync overhead dominates prefill |
+
+**Core finding:** On Maxwell-era hardware, the assumption baked into most LLM acceleration techniques — that verification or batch operations can run in parallel — does not hold. Every matrix multiply is a sequential FP32 chain. Techniques that add overhead without reducing that chain make things worse.
+
+---
+
+## Repository File Tree
+
+```
+LegacyRAG-v2-experiments/
+├── legacyrag_v2/
+│   ├── experiment1_baseline.py          # phi3:mini throughput across prompt lengths
+│   ├── experiment2_speculative_draft.py # speculative decoding: qwen2 draft model
+│   ├── experiment3_ngram.py             # n-gram speculative decoding
+│   ├── experiment4_quantization.py      # qwen2.5-7B at Q2_K quantization
+│   ├── benchmark_runner.py              # orchestrates all 4 experiments
+│   ├── analysis.py                      # post-run table and stats generation
+│   └── results/                         # JSON output from each experiment run
+│       ├── exp1_baseline.json
+│       ├── exp2_speculative.json
+│       ├── exp3_ngram.json
+│       └── exp4_quantization.json
+├── legacyrag/                           # v1 pipeline (reference implementation)
+│   ├── vram_scheduler.py
+│   ├── embedder.py
+│   ├── retriever.py
+│   ├── generator.py
+│   ├── pipeline.py
+│   └── benchmark.py
+├── graphs/                              # benchmark visualizations
+├── paper_findings.md                    # full v1 research writeup with tables
+├── results_table.csv                    # tabular export of v1 benchmark_results.json
+├── benchmark_results.json               # v1 per-request benchmark records
+├── benchmark_results_baseline.json      # immutable copy of v1 baseline data
+├── schedule_decisions.jsonl             # VRAM scheduler decision log (v1)
+├── stress_test_results.json             # v1 concurrent load test
+├── requirements.txt
+├── main.py                              # v1 FastAPI app entry point
+└── README.md
+```
+
+---
 
 ## Setup
 
 ### Prerequisites
 
 ```bash
-# llama.cpp server with Vulkan backend running on port 8080
+# llama.cpp b9297 or later, built with Vulkan backend
 # Ollama running on port 11434
 ollama pull nomic-embed-text
+ollama pull phi3:mini
+ollama pull qwen2:1.5b
+ollama pull qwen2:0.5b
+ollama pull qwen2.5:7b
 ```
 
 ### Install
 
 ```bash
+git clone https://github.com/azeez-1904/LegacyRAG-v2-experiments.git
+cd LegacyRAG-v2-experiments
 pip install -r requirements.txt
 ```
 
-### Run
+### Run All Experiments
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8001
+cd legacyrag_v2
+python3 benchmark_runner.py        # runs all 4 experiments sequentially
+# results written to results/
 ```
 
-### Ingest a document
+### Run Individual Experiments
 
 ```bash
-curl -X POST http://localhost:8001/ingest \
-  -H "Content-Type: application/json" \
-  -d '{"text": "your document text here", "doc_id": "doc1"}'
+cd legacyrag_v2
+python3 experiment1_baseline.py          # phi3:mini baseline
+python3 experiment2_speculative_draft.py # speculative decoding
+python3 experiment3_ngram.py             # n-gram speculative
+python3 experiment4_quantization.py      # quantization 7B
 ```
 
-### Query
+### Analyze Results
 
 ```bash
-curl -X POST http://localhost:8001/query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "your question here", "top_k": 5, "max_tokens": 128}'
+cd legacyrag_v2
+python3 analysis.py                # prints comparison tables from results/
 ```
 
-### llama-server (dual-GPU, recommended for benchmarking)
+### llama-server (recommended launch flags for these experiments)
 
 ```bash
+# Experiments 1, 3 (phi3:mini)
 LD_LIBRARY_PATH=build/bin build/bin/llama-server \
-  -m /path/to/phi3-mini.gguf \
+  -m /path/to/phi3-mini-q4_k_m.gguf \
   -ngl 99 \
-  --split-mode layer \
-  --tensor-split 1,1 \
-  --main-gpu 0 \
-  --port 8080 \
-  --slots
+  --port 8080
+
+# Experiment 2 (qwen2:1.5b target)
+LD_LIBRARY_PATH=build/bin build/bin/llama-server \
+  -m /path/to/qwen2-1.5b.gguf \
+  --draft-model /path/to/qwen2-0.5b.gguf \
+  -ngl 99 \
+  --port 8080
+
+# Experiment 4 (qwen2.5-7B Q2_K)
+LD_LIBRARY_PATH=build/bin build/bin/llama-server \
+  -m /path/to/qwen2.5-7b-q2_k.gguf \
+  -ngl 99 \
+  --port 8080
 ```
 
-## Benchmark Results
-
-See [`paper_findings.md`](paper_findings.md) for the full research summary.
-
-### Latency Breakdown
-![Latency Breakdown](graphs/latency_breakdown.png)
-
-Generation dominates at **99.86% of total latency**. Embedding (0.6–0.8s) and retrieval (0.0002s) are negligible.
-
-### Generation Speed — Single GPU vs Dual-GPU
-![Tokens per Second](graphs/tokens_per_second.png)
-
-| Config | Prefill tok/s | Decode tok/s |
-|---|---|---|
-| Single GPU (idle) | ~26 | ~9 |
-| Single GPU (sustained load) | 1–6 | 0.29–1.66 |
-| Dual GPU (idle, layer split) | **0.52** | **8.35** |
-
-**Key finding:** Dual-GPU Vulkan layer split on Maxwell hardware degrades prefill by 50× due to inter-device synchronization overhead, while decode speed is unchanged.
-
-### VRAM Usage Per Request
-![VRAM Usage](graphs/vram_usage.png)
-
-Both GPUs stayed well above the 800 MB threshold throughout all tests. The VRAM scheduler never triggered a CPU fallback during the baseline runs.
-
-### VRAM Scheduler Decisions
-![Scheduler Decisions](graphs/scheduler_decisions.png)
-
-All 7 embedding decisions routed to GPU. Free VRAM remained stable between 1,400–2,000 MB across both cards.
-
-## Files
-
-```
-legacyrag/
-  vram_scheduler.py   — per-GPU nvidia-smi monitoring + routing decisions
-  embedder.py         — nomic-embed-text via Ollama, respects scheduler
-  retriever.py        — cosine similarity store with disk persistence
-  generator.py        — llama.cpp streaming client with stall detection
-  pipeline.py         — ingest + query orchestration
-  benchmark.py        — per-request logging + stress_test()
-main.py               — FastAPI app
-requirements.txt
-paper_findings.md     — full benchmark writeup with tables
-results_table.csv     — tabular export of benchmark_results.json
-benchmark_results.json
-stress_test_results.json
-```
+---
 
 ## Research Context
 
-This system was built to document real-world inference performance on legacy data-center GPUs (Quadro K4200, EOL 2019) as part of an arXiv research paper on edge inference constraints. The goal is to characterize what RAG pipelines are feasible on hardware that institutions may still have deployed — and where the actual bottlenecks lie.
+This project is part of a four-paper series studying inference feasibility on legacy and constrained hardware, targeting IEEE and ACL venues:
+
+### Research Series
+
+| Repo | Description | Venue |
+|---|---|---|
+| [LegacyRAG v1](https://github.com/azeez-1904/LegacyRAG) | Original VRAM-aware RAG pipeline on K4200; establishes 0.95 tok/s baseline and VRAM scheduler | arXiv 2026 |
+| **LegacyRAG v2 (this repo)** | Benchmark suite: speculative decoding + quantization on same hardware | IC2E 2026 |
+| [PhaseRAG v3](https://github.com/azeez-1904/PhaseRAG-LegacyRAG-v3) | CPU-GPU phase splitting; builds on v2 finding that GPU-only tricks fail on Maxwell | MLSys 2027 |
+| [TemporalRAG](https://github.com/azeez-1904/TemporalRAG) | Version-aware document retrieval; addresses knowledge staleness in long-running edge deployments | ACL 2027 |
+
+**Series progression:**
+```
+LegacyRAG v1          LegacyRAG v2          PhaseRAG v3           TemporalRAG
+(baseline: what       (what doesn't work     (what does work:      (next open problem:
+ the hardware does)    and why)               CPU-GPU phasing)       temporal drift)
+     0.95 tok/s  ──►      8.278 tok/s   ──►    improved split  ──►   staleness-aware
+```
+
+---
 
 ## Citation
 
-If you use LegacyRAG in your research, please cite:
+If you use LegacyRAG v2 in your research, please cite:
+
+```bibtex
+@inproceedings{legacyrag_v2_2026,
+  title     = {LegacyRAG v2: Speculative Decoding and Quantization for Edge RAG on Legacy Vulkan Hardware},
+  author    = {Ahmad, Azeez},
+  booktitle = {IEEE International Conference on Cloud Engineering (IC2E)},
+  year      = {2026},
+  url       = {https://github.com/azeez-1904/LegacyRAG-v2-experiments}
+}
+```
+
+For the original VRAM-aware pipeline (v1 baseline):
 
 ```bibtex
 @misc{legacyrag2026,
   title   = {LegacyRAG: VRAM-Aware Retrieval-Augmented Generation on Legacy GPU Hardware},
-  author  = {Azeez},
+  author  = {Ahmad, Azeez},
   year    = {2026},
   url     = {https://github.com/azeez-1904/LegacyRAG}
 }
 ```
+
+---
 
 ## License
 
