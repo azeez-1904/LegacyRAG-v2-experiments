@@ -2,10 +2,6 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
-[![IEEE IC2E 2026](https://img.shields.io/badge/IEEE-IC2E%202026-blue.svg)](https://conferences.computer.org/IC2E/)
-
-> **Target venue:** IEEE International Conference on Cloud Engineering (IC2E) 2026 — Demo Paper
-
 ---
 
 ## What It Does
@@ -321,16 +317,16 @@ LD_LIBRARY_PATH=build/bin build/bin/llama-server \
 
 ## Research Context
 
-This project is part of a four-paper series studying inference feasibility on legacy and constrained hardware, targeting IEEE and ACL venues:
+This project is part of a four-paper series studying inference feasibility on legacy and constrained hardware:
 
 ### Research Series
 
-| Repo | Description | Venue |
-|---|---|---|
-| [LegacyRAG v1](https://github.com/azeez-1904/LegacyRAG) | Original VRAM-aware RAG pipeline on K4200; establishes 0.95 tok/s baseline and VRAM scheduler | arXiv 2026 |
-| **LegacyRAG v2 (this repo)** | Benchmark suite: speculative decoding + quantization on same hardware | IC2E 2026 |
-| [PhaseRAG v3](https://github.com/azeez-1904/PhaseRAG-LegacyRAG-v3) | CPU-GPU phase splitting; builds on v2 finding that GPU-only tricks fail on Maxwell | MLSys 2027 |
-| [TemporalRAG](https://github.com/azeez-1904/TemporalRAG) | Version-aware document retrieval; addresses knowledge staleness in long-running edge deployments | ACL 2027 |
+| Repo | Description |
+|---|---|
+| [LegacyRAG v1](https://github.com/azeez-1904/LegacyRAG) | Original VRAM-aware RAG pipeline on K4200; establishes 0.95 tok/s baseline and VRAM scheduler |
+| **LegacyRAG v2 (this repo)** | Benchmark suite: speculative decoding + quantization on same hardware |
+| [PhaseRAG v3](https://github.com/azeez-1904/PhaseRAG-LegacyRAG-v3) | CPU-GPU phase splitting; builds on v2 finding that GPU-only tricks fail on Maxwell |
+| [TemporalRAG](https://github.com/azeez-1904/TemporalRAG) | Version-aware document retrieval; addresses knowledge staleness in long-running edge deployments |
 
 **Series progression:**
 ```
@@ -350,7 +346,6 @@ If you use LegacyRAG v2 in your research, please cite:
 @inproceedings{legacyrag_v2_2026,
   title     = {LegacyRAG v2: Speculative Decoding and Quantization for Edge RAG on Legacy Vulkan Hardware},
   author    = {Ahmad, Azeez},
-  booktitle = {IEEE International Conference on Cloud Engineering (IC2E)},
   year      = {2026},
   url       = {https://github.com/azeez-1904/LegacyRAG-v2-experiments}
 }
