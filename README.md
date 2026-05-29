@@ -10,15 +10,11 @@
 
 ## What It Does
 
-LegacyRAG v2 is a **reproducible benchmark suite** that tests whether two popular LLM acceleration techniques — speculative decoding and aggressive quantization — actually help on old GPU hardware that never received the compute features these tricks depend on.
+LegacyRAG v2 is a **reproducible benchmark suite** evaluating speculative decoding and aggressive quantization for LLM inference on Maxwell-generation Vulkan hardware. The experiments characterize whether these standard throughput optimizations transfer to hardware lacking FP16 matrix acceleration and tensor cores.
 
-**Plain-English analogy:** Imagine you own a 2004 Honda Civic and you want to go faster. Someone suggests installing a turbocharger (speculative decoding) or swapping in a smaller, lighter engine (quantization to a bigger model). The turbocharger requires engine mounts that don't exist on your car. The lighter engine is still a V6, so it's heavier than your original 4-cylinder even at reduced size. The only thing that actually helps is drafting behind a truck (n-gram prediction), which costs you nothing.
+**Research question:** On hardware without FP16 or tensor cores — where all matrix arithmetic executes in FP32 — do speculative decoding or aggressive quantization improve inference throughput for an edge RAG pipeline?
 
-That is exactly what we found on a pair of NVIDIA Quadro K4200 GPUs from 2014.
-
-**The question this project answers:** On hardware without FP16 or tensor cores — where all matrix math runs in FP32 — do speculative decoding or heavy quantization improve inference throughput for an edge RAG pipeline?
-
-**Short answer:** No, with one exception. N-gram speculative decoding (+10%) is the only technique that helps, because it adds zero VRAM overhead and requires no parallel verification step.
+**Primary finding:** Neither technique yields a throughput gain on this hardware class. N-gram speculative decoding (+10%) is the sole exception, as it introduces no VRAM overhead and imposes no parallel verification requirement.
 
 ---
 
@@ -41,7 +37,7 @@ That is exactly what we found on a pair of NVIDIA Quadro K4200 GPUs from 2014.
 - **4 standalone benchmark experiments** — each Python script is self-contained and re-runnable
 - **`benchmark_runner.py`** — orchestrates all 4 experiments sequentially, writes structured JSON to `results/`
 - **Controlled comparison** — all experiments run against the same hardware, same Vulkan backend, same prompt corpus
-- **Honest negative results** — v2 documents what *does not* work and explains exactly why, not just what does
+- **Negative results documented** — v2 reports all non-improving configurations with mechanistic explanations of root cause
 - **Builds on v1 baseline** — v1 measured 0.95 tok/s; v2 baseline (Exp 1) measures 8.278 tok/s after llama.cpp backend upgrade, giving a 771% improvement as the new reference point
 - **Analysis module** — `analysis.py` generates comparison tables and summary statistics from the `results/` directory
 
@@ -106,7 +102,7 @@ Throughput is stable across prompt lengths — Maxwell's FP32 compute rate is th
 
 ---
 
-## Why the Tricks Fail — ASCII Diagrams
+## Performance Degradation Analysis — ASCII Diagrams
 
 ### How Speculative Decoding Is Supposed to Work
 
@@ -152,10 +148,10 @@ Result: extra overhead from running the draft model, no parallelism benefit
 ### Why Aggressive Quantization Doesn't Help
 
 ```
-QUANTIZATION INTUITION (intended)
+QUANTIZATION ASSUMPTION (intended)
 ───────────────────────────────────
 phi3:mini  3.8B params  Q4_K_M  →  fast   ✓
-qwen2.5-7B 7B params    Q2_K    →  "same size file, should be similar speed"
+qwen2.5-7B 7B params    Q2_K    →  comparable on-disk size, expected similar speed
 
 WHAT ACTUALLY DETERMINES SPEED ON MAXWELL
 ───────────────────────────────────────────
@@ -196,7 +192,7 @@ Result: +9.7% throughput with zero additional resource cost
 
 ---
 
-## What Works / What Doesn't
+## Technique Evaluation Summary
 
 | Technique | Result | Root cause |
 |---|---|---|
@@ -206,7 +202,7 @@ Result: +9.7% throughput with zero additional resource cost
 | Aggressive quantization (bigger model, lower bits) | −54% | Parameter count drives FP32 op count; bits don't |
 | Dual-GPU layer split (from v1) | −50% prefill | Inter-GPU Vulkan sync overhead dominates prefill |
 
-**Core finding:** On Maxwell-era hardware, the assumption baked into most LLM acceleration techniques — that verification or batch operations can run in parallel — does not hold. Every matrix multiply is a sequential FP32 chain. Techniques that add overhead without reducing that chain make things worse.
+**Core finding:** On Maxwell-era hardware, the parallelism assumption underlying most LLM acceleration techniques — that verification or batch operations execute concurrently — does not hold. All matrix multiplications are dispatched as sequential FP32 operations. Techniques that introduce additional computational overhead without eliminating sequential steps in this chain reduce net throughput.
 
 ---
 
@@ -335,8 +331,8 @@ This project is part of a four-paper series studying inference feasibility on le
 **Series progression:**
 ```
 LegacyRAG v1          LegacyRAG v2          PhaseRAG v3           TemporalRAG
-(baseline: what       (what doesn't work     (what does work:      (next open problem:
- the hardware does)    and why)               CPU-GPU phasing)       temporal drift)
+(hardware baseline;   (negative results:    (positive result:     (open problem:
+ VRAM scheduler)       GPU-only limits)      CPU-GPU phasing)      temporal drift)
      0.95 tok/s  ──►      8.278 tok/s   ──►    improved split  ──►   staleness-aware
 ```
 
