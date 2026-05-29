@@ -55,6 +55,10 @@ LegacyRAG v2 is a **reproducible benchmark suite** evaluating speculative decodi
 | Exp 3: N-gram speculative | ngram-simple | **9.084** | +856% | +10% |
 | Exp 4: Quantization 7B | qwen2.5:7b-q2_K | 3.823 | +302% | **−54%** |
 
+### Throughput Comparison
+
+![Throughput Comparison](graphs/fig_v2_throughput.png)
+
 ### ASCII Throughput Bar Chart
 
 ```
