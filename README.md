@@ -39,6 +39,16 @@ LegacyRAG v2 is a **reproducible benchmark suite** evaluating speculative decodi
 
 ---
 
+## Novel Contributions
+
+1. **Systematic failure analysis of GPU throughput optimizations on no-FP16 hardware** — first controlled benchmark showing that speculative decoding (−59%) and aggressive quantization (−54%) both degrade throughput on Maxwell-era Vulkan hardware due to the absence of parallel batch execution and tensor core acceleration.
+2. **Mechanistic explanation of speculative decoding failure** — draft acceptance rate of 36.86% combined with sequential FP32 verification on K4200 means all parallelism assumptions fail; documents this as a hardware-class property, not a configuration issue.
+3. **N-gram speculative decoding as zero-overhead alternative** — demonstrates +9.7% throughput gain at zero VRAM cost on Maxwell, establishing n-gram as the sole viable speculation strategy for this hardware class.
+4. **Parameter count as the true throughput determinant** — shows that quantization level is irrelevant on Maxwell; GFLOP count per token step scales with parameter count regardless of quantization, not model file size.
+5. **Reproducible negative-result benchmark suite** — four self-contained experiment scripts with structured JSON output, enabling reproduction on any llama.cpp Vulkan deployment.
+
+---
+
 ## Benchmark Results
 
 ### Summary Table
